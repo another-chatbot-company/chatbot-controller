@@ -39,7 +39,7 @@ namespace fepbot_qnamaker
                 });
 
                 await Conversation.SendAsync(activity, () => new Dialogs.QnaDialog());
-                PromptDialog.Choice<Sim>
+                
             }
             else if (activity.Type == ActivityTypes.ConversationUpdate)
             {
