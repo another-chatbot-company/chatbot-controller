@@ -41,9 +41,9 @@ namespace chatbot_controller
                 {
                     await Conversation.SendAsync(activity, () => new QnaDialog());
 
-                    var reply = activity.CreateReply("Essa resposta lhe foi útil?");
-                    ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                    await connector.Conversations.ReplyToActivityAsync(reply);
+                    //var reply = activity.CreateReply("Essa resposta lhe foi útil?");
+                    //ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                    //await connector.Conversations.ReplyToActivityAsync(reply);
                 }                
             }
             else if (activity.Type == ActivityTypes.ConversationUpdate)

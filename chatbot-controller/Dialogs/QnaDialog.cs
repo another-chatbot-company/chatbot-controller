@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Diagnostics;
 using Microsoft.Bot.Builder.Dialogs.Internals;
+using System.Threading;
 
 namespace chatbot_controller.Dialogs
 {
@@ -32,24 +33,23 @@ namespace chatbot_controller.Dialogs
 
         }
 
-        public async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> argument)
-        {
-           
-        }
-
-
         protected override async Task RespondFromQnAMakerResultAsync(IDialogContext context, IMessageActivity message, QnAMakerResults result)
         {
             var firstAnswer = result.Answers.First().Answer;
 
             Debug.WriteLine("answerData:" + firstAnswer);
-
+            
             await context.PostAsync(firstAnswer);
-            
 
-            
+            await context.Forward(new ConfirmationDialog(), ChildDialogComplete, message, CancellationToken.None);
+
         }
 
+        public virtual async Task ChildDialogComplete(IDialogContext context, IAwaitable<object> response)
+        {
+            await response;
+            context.Done(this);
+        }
 
     }
 

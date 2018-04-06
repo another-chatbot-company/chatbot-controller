@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Diagnostics;
+using System.ComponentModel;
 
 namespace chatbot_controller.Dialogs
 {
@@ -21,35 +22,37 @@ namespace chatbot_controller.Dialogs
             return Task.CompletedTask;
         }
 
-        public virtual async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
+        public virtual async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
             var r = await result;
 
             PromptDialog.Choice(
                    context: context,
                    resume: ChoiceReceivedAsync,
-                   options: this.options,
+                   options: (IEnumerable<SimNao>)Enum.GetValues(typeof(SimNao)),
                    prompt: "Essa resposta atendeu plenamente a sua dúvida?",
                    retry: "Poderia refazer sua pergunta. Por favor?",
                    promptStyle: PromptStyle.Auto
                );
         }
 
-        public virtual async Task ChoiceReceivedAsync(IDialogContext context, IAwaitable<String> activity)
+        public virtual async Task ChoiceReceivedAsync(IDialogContext context, IAwaitable<SimNao> activity)
         {
 
-            String response = await activity;
+            var response = await activity;
             Debug.WriteLine("O usuário disse:" + response);
+            Debug.WriteLine("Entrou no [ConfirmationDialog] ChoiceReceivedAsync");
 
-        }
-
-        public virtual async Task ChildDialogComplete(IDialogContext context, IAwaitable<object> response)
-        {
-
-            await context.PostAsync("Obrigado pela sua resposta!.");
             context.Done(this);
 
         }
 
+    }
+
+    public enum SimNao {
+        [Description("Sim")]
+        Sim = 1,
+        [Description("Não")]
+        Nao
     }
 }
