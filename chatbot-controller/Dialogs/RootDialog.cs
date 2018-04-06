@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 
-namespace fepbot_qnamaker.Dialogs
+namespace chatbot_controller.Dialogs
 {
     [Serializable]
     public class RootDialog : IDialog<object>

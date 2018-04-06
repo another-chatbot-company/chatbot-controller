@@ -9,8 +9,11 @@ using System.Configuration;
 using System;
 using System.Linq;
 using Microsoft.Bot.Builder.CognitiveServices.QnAMaker;
+using System.Collections.Generic;
+using chatbot_controller.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Internals;
 
-namespace fepbot_qnamaker
+namespace chatbot_controller
 {
     [BotAuthentication]
     public class MessagesController : ApiController
@@ -19,16 +22,29 @@ namespace fepbot_qnamaker
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
         /// </summary>
+        /// 
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
             if (activity.Type == ActivityTypes.Message)
             {
-                
+                if (activity.Text.ToString().ToLower().Equals("sim") || activity.Text.ToString().ToLower().Equals("s"))
+                {
+                    await Conversation.SendAsync(activity, () => new ConfirmationDialog());
+                }
+                else if (activity.Text.ToString().ToLower().Equals("não") || activity.Text.ToString().ToLower().Equals("n"))
+                {
+                    var reply = activity.CreateReply("Que pena...\nPosso lhe ajudar a abrir um ticket então?");
+                    ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                    await connector.Conversations.ReplyToActivityAsync(reply);
+                }
+                else
+                {
+                    await Conversation.SendAsync(activity, () => new QnaDialog());
 
-                await Conversation.SendAsync(activity, () => new Dialogs.QnaDialog(
-                    new QnAMakerService(new QnAMakerAttribute(ConfigurationManager.AppSettings["QnaSubscriptionKey"],
-                    ConfigurationManager.AppSettings["QnaKnowledgebaseId"],"Desculpe-me, mas não achei resposta para sua pergunta", 0.5))));
-
+                    var reply = activity.CreateReply("Essa resposta lhe foi útil?");
+                    ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                    await connector.Conversations.ReplyToActivityAsync(reply);
+                }                
             }
             else if (activity.Type == ActivityTypes.ConversationUpdate)
             {
@@ -38,7 +54,9 @@ namespace fepbot_qnamaker
                     {
                         if (member.Id != activity.Recipient.Id)
                         {
-                            await this.SendConversation(activity);
+                            var reply = activity.CreateReply("Olá! Eu sou o FEPBot. :)\n\nSou um robô em treinamento, mas posso ser mais ágil do que um ticket!\nDigite sua pergunta, por favor!");
+                            ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                            await connector.Conversations.ReplyToActivityAsync(reply);
                         }
                     }
                 }
@@ -47,11 +65,11 @@ namespace fepbot_qnamaker
             {
                 HandleSystemMessage(activity);
             }
+            
+
             var response = Request.CreateResponse(HttpStatusCode.OK);
             return response;
         }
-
-        
 
         private Activity HandleSystemMessage(Activity message)
         {
@@ -82,11 +100,5 @@ namespace fepbot_qnamaker
             return null;
         }
 
-        private async Task SendConversation(Activity activity)
-        {
-            await Conversation.SendAsync(activity, () => Chain.From(() => FormDialog.FromForm(() => Form.Pedido.BuildForm(), FormOptions.PromptFieldsWithValues)));
-        }
     }
-
-    
 }

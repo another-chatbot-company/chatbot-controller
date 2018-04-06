@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace fepbot_qnamaker.Models
+namespace chatbot_controller.Models
 {
     public class Ticket
     {

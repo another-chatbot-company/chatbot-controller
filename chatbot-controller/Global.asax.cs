@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.Http;
 using System.Web.Routing;
 
-namespace fepbot_qnamaker
+namespace chatbot_controller
 {
     public class WebApiApplication : System.Web.HttpApplication
     {

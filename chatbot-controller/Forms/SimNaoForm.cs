@@ -1,4 +1,4 @@
-﻿using fepbot_qnamaker.Models;
+﻿using chatbot_controller.Models;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.FormFlow;
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace fepbot_qnamaker.Forms
+namespace chatbot_controller.Forms
 {
     [Serializable]
     [Template(TemplateUsage.NotUnderstood, "Desculpe-me, não entendi: \"{0}\". Poderia reescrever de outra forma, por favor?")]

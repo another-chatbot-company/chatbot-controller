@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
 
-namespace fepbot_qnamaker
+namespace chatbot_controller
 {
     public static class WebApiConfig
     {
