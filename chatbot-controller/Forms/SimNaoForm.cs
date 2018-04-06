@@ -9,7 +9,7 @@ using System.Web;
 namespace fepbot_qnamaker.Forms
 {
     [Serializable]
-    [Template(TemplateUsage.NotUnderstood, "Desculpe-me, não entendi\"{0}\".")]
+    [Template(TemplateUsage.NotUnderstood, "Desculpe-me, não entendi: \"{0}\". Poderia reescrever de outra forma, por favor?")]
     public class SimNaoForm
     {
 
