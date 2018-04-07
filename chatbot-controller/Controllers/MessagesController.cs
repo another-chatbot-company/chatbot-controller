@@ -12,6 +12,7 @@ using Microsoft.Bot.Builder.CognitiveServices.QnAMaker;
 using System.Collections.Generic;
 using chatbot_controller.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Internals;
+using System.Diagnostics;
 
 namespace chatbot_controller
 {
@@ -23,28 +24,89 @@ namespace chatbot_controller
         /// Receive a message from a user and reply to it
         /// </summary>
         /// 
+        private static string ChatState = "qna";
+        private static bool hasQnAAnswered = false;
+
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
+            Debug.WriteLine("ChatState Global:" + ChatState);
             if (activity.Type == ActivityTypes.Message)
             {
-                if (activity.Text.ToString().ToLower().Equals("sim") || activity.Text.ToString().ToLower().Equals("s"))
-                {
-                    await Conversation.SendAsync(activity, () => new ConfirmationDialog());
-                }
-                else if (activity.Text.ToString().ToLower().Equals("não") || activity.Text.ToString().ToLower().Equals("n"))
-                {
-                    var reply = activity.CreateReply("Que pena...\nPosso lhe ajudar a abrir um ticket então?");
-                    ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                    await connector.Conversations.ReplyToActivityAsync(reply);
-                }
-                else
-                {
-                    await Conversation.SendAsync(activity, () => new QnaDialog());
+                var userMessage = activity.Text.ToString().ToLower();
 
-                    //var reply = activity.CreateReply("Essa resposta lhe foi útil?");
-                    //ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                    //await connector.Conversations.ReplyToActivityAsync(reply);
-                }                
+                if (ChatState.Equals("qna"))
+                {
+                    if (!hasQnAAnswered)
+                    {
+                        Debug.WriteLine("===================== chamou QNADIALOG ==========================");
+                        await Conversation.SendAsync(activity, () => new QnaDialog());
+                        hasQnAAnswered = true;
+
+                        if (!ChatState.Equals("ticket")) { 
+                            var reply = activity.CreateReply("Essa resposta sanou sua dúvida (Sim ou Não)?");
+                            ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+
+                            await connector.Conversations.ReplyToActivityAsync(reply);
+                        }
+                    
+                    }
+                    else
+                    {
+                        if (userMessage.Contains("sim") || userMessage.Equals("s"))
+                        {
+                            var reply = activity.CreateReply("Que bom! Meu treinamento está compensando!\nAté a próxima!");
+                            ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                            await connector.Conversations.ReplyToActivityAsync(reply);
+
+                            hasQnAAnswered = false;
+                            ChatState = "qna";
+                        }
+                        else if (userMessage.Contains("nao") || userMessage.Equals("n") || userMessage.Equals("não"))
+                        {
+                            var reply = activity.CreateReply("Que pena...\nPosso lhe ajudar a abrir um ticket então?");
+                            ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                            await connector.Conversations.ReplyToActivityAsync(reply);
+
+                            Debug.WriteLine("ChatState1:" + ChatState);
+                            hasQnAAnswered = true;
+                            ChatState = "ticket";
+                            Debug.WriteLine("ChatState2:" + ChatState);
+                        }
+                        else
+                        {
+                            var reply = activity.CreateReply("Perdão, não entendi");
+                            ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                            await connector.Conversations.ReplyToActivityAsync(reply);
+                        }
+                    }
+                }
+                else if (ChatState.Equals("ticket"))
+                {
+                    Debug.WriteLine("Está no local correto!");
+                    if (userMessage.Contains("sim") || userMessage.Equals("s"))
+                    {
+                        
+                        await Conversation.SendAsync(activity, () => new TicketDialog());
+                        hasQnAAnswered = false;
+                        ChatState = "ticket";
+                    }
+                    else if (userMessage.Contains("nao") || userMessage.Equals("n") || userMessage.Equals("não"))
+                    {
+                        var reply = activity.CreateReply("Tudo bem, então! Obrigado pela paciência e até mais!");
+                        ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                        await connector.Conversations.ReplyToActivityAsync(reply);
+
+                        hasQnAAnswered = false;
+                        ChatState = "qna";
+                    }
+                    else
+                    {
+                        var reply = activity.CreateReply("Perdão, não entendi");
+                        ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                        await connector.Conversations.ReplyToActivityAsync(reply);
+                    }
+                }
+        
             }
             else if (activity.Type == ActivityTypes.ConversationUpdate)
             {

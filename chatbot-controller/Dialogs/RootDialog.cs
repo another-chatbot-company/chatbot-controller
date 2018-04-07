@@ -4,33 +4,50 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace chatbot_controller.Dialogs
 {
     [Serializable]
     public class RootDialog : IDialog<object>
     {
-        public Task StartAsync(IDialogContext context)
-        {
-            context.Wait(MessageReceivedAsync);
+        IEnumerable<string> options = new List<string> { "Sim", "Não" };
 
-            return Task.CompletedTask;
+        public async Task StartAsync(IDialogContext context)
+        {
+            await context.PostAsync("");
+            context.Wait(this.ShowTicketDialog);
+            
         }
 
-        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
+        public virtual async Task ShowTicketDialog(IDialogContext context, IAwaitable<IMessageActivity> activity)
         {
-            var activity = await result as Activity;
+            var message = await activity;
+            PromptDialog.Choice(
+                context: context,
+                resume: ChoiceReceivedAsync,
+                options: this.options,
+                prompt: "Essa resposta foi boa o suficiente?",
+                retry: "Talvez seja melhor tentar outra...",
+                promptStyle: PromptStyle.Auto
+                );
+        }
+        public virtual async Task ChoiceReceivedAsync(IDialogContext context, IAwaitable<string> activity)
+        {
+            var response = await activity;
 
-            await context.Forward(new QnaDialog(), ResumeAfterQnaDialog, activity, CancellationToken.None);
+            context.Call<object>(new TicketDialog(), ChildDialogComplete);
+
 
         }
 
-        private async Task ResumeAfterQnaDialog(IDialogContext context, IAwaitable<IMessageActivity> result)
+        public virtual async Task ChildDialogComplete(IDialogContext context, IAwaitable<object> response)
         {
-            Debug.WriteLine("Entrou no [RootDialog] ResumeAfterQnaDialog");
-            var activity = await result as Activity;
+            await context.PostAsync("Muito obrigado pela atenção!");
             context.Done(this);
-
         }
+
+
+
     }
 }

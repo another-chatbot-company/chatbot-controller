@@ -11,12 +11,12 @@ using System.Diagnostics;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using System.Threading;
 
+
 namespace chatbot_controller.Dialogs
 {
     [Serializable]
     public class QnaDialog : QnAMakerDialog
     {
-        
 
         public QnaDialog(QnAMakerService qnaService) : base(qnaService)
         {
@@ -28,7 +28,7 @@ namespace chatbot_controller.Dialogs
                 ConfigurationManager.AppSettings["QnaSubscriptionKey"],
                 ConfigurationManager.AppSettings["QnaKnowledgebaseId"], 
                 "Desculpe-me, mas não achei resposta para sua pergunta", 
-                0.5)))
+                0.5, 1)))
         {
 
         }
@@ -40,15 +40,6 @@ namespace chatbot_controller.Dialogs
             Debug.WriteLine("answerData:" + firstAnswer);
             
             await context.PostAsync(firstAnswer);
-
-            await context.Forward(new ConfirmationDialog(), ChildDialogComplete, message, CancellationToken.None);
-
-        }
-
-        public virtual async Task ChildDialogComplete(IDialogContext context, IAwaitable<object> response)
-        {
-            await response;
-            context.Done(this);
         }
 
     }
