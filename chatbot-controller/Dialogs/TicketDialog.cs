@@ -29,6 +29,7 @@ namespace chatbot_controller.Dialogs
 
         public async Task OpenDialog(IDialogContext context, IAwaitable<IMessageActivity> activity)
         {
+
             var response = await activity;
 
             PromptDialog.Choice(
