@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using System.Diagnostics;
 
 namespace chatbot_controller.Dialogs
 {
@@ -17,30 +18,62 @@ namespace chatbot_controller.Dialogs
         string email;
         string phone;
 
+        private IEnumerable<string> options = new List<string> { "Sim", "Não"};
+
         public async Task StartAsync(IDialogContext context)
         {
-            await context.PostAsync("Então vamos lá!");
-            //return Task.CompletedTask;
+            await context.PostAsync("Sua dúvida foi esclarecida?");
+            context.Wait(this.OpenDialog);
 
-            context.Wait(MessageReceivedAsync);
         }
 
-        public virtual async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> activity)
+        public async Task OpenDialog(IDialogContext context, IAwaitable<IMessageActivity> activity)
         {
             var response = await activity;
+
+            PromptDialog.Choice(
+                context: context,
+                resume: MessageReceivedAsync,
+                options: this.options,
+                prompt: "Escolha uma das opções abaixo",
+                retry: "Tente novamente. Por favor.",
+                promptStyle: PromptStyle.Auto
+                );
+
+        }
+
+        public virtual async Task MessageReceivedAsync(IDialogContext context, IAwaitable<string> answer)
+        {
+            try
+            {
+                var response1 = await answer;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.StackTrace);
+            }
+
+            var response = "sim";
+            if (response.ToLower().Equals("sim"))
+            {
                 PromptDialog.Text(
                     context: context,
                     resume: ResumeGetName,
                     prompt: "Please share your good name",
                     retry: "Sorry, I didn't understand that. Please try again."
                 );
+            }
+            else {
+                await context.PostAsync("Que pena...\nPosso lhe ajudar a abrir um ticket então?");
+                context.Done(this);
+            }
 
         }
 
         public virtual async Task ResumeGetName(IDialogContext context, IAwaitable<string> Username)
         {
             string response = await Username;
-            name = response; ;
+            name = response;
 
             PromptDialog.Text(
                 context: context,
@@ -71,5 +104,6 @@ namespace chatbot_controller.Dialogs
 
             context.Done(this);
         }
+        
     }
 }

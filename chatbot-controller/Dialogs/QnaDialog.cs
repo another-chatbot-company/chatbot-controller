@@ -18,6 +18,8 @@ namespace chatbot_controller.Dialogs
     public class QnaDialog : QnAMakerDialog
     {
 
+        
+
         public QnaDialog(QnAMakerService qnaService) : base(qnaService)
         {
 
@@ -33,15 +35,29 @@ namespace chatbot_controller.Dialogs
 
         }
 
+
         protected override async Task RespondFromQnAMakerResultAsync(IDialogContext context, IMessageActivity message, QnAMakerResults result)
         {
             var firstAnswer = result.Answers.First().Answer;
 
-            Debug.WriteLine("answerData:" + firstAnswer);
-            
             await context.PostAsync(firstAnswer);
+
+            await context.Forward(new TicketDialog(), this.ResumeAfterTicketDialog, message, CancellationToken.None);
+
         }
 
+        private async Task ResumeAfterTicketDialog(IDialogContext context, IAwaitable<object> result)
+        {
+            try
+            {
+                var whatever = await result;
+                await context.PostAsync(whatever.ToString());
+            }
+            catch (Exception e)
+            {
+            }
+            
+        }
     }
 
     

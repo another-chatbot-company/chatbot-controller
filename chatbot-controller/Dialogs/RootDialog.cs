@@ -15,38 +15,33 @@ namespace chatbot_controller.Dialogs
 
         public async Task StartAsync(IDialogContext context)
         {
-            await context.PostAsync("");
-            context.Wait(this.ShowTicketDialog);
-            
+            await context.PostAsync("Só um minuto...");
+            context.Wait(this.MessageReceivedAsync);
         }
 
-        public virtual async Task ShowTicketDialog(IDialogContext context, IAwaitable<IMessageActivity> activity)
+        public virtual async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
-            var message = await activity;
-            PromptDialog.Choice(
-                context: context,
-                resume: ChoiceReceivedAsync,
-                options: this.options,
-                prompt: "Essa resposta foi boa o suficiente?",
-                retry: "Talvez seja melhor tentar outra...",
-                promptStyle: PromptStyle.Auto
-                );
+            var message = await result; // We've got a message!
+
+            await context.Forward(new QnaDialog(), this.ResumeAfterQnaDialog, message, CancellationToken.None);
+           
         }
-        public virtual async Task ChoiceReceivedAsync(IDialogContext context, IAwaitable<string> activity)
+
+        private async Task ResumeAfterQnaDialog(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
-            var response = await activity;
+            try
+            {
+                var message = await result;
+            }
+            catch (Exception e)
+            {
+                e.GetBaseException();
+            }
 
-            context.Call<object>(new TicketDialog(), ChildDialogComplete);
-
+            // Again, wait for the next message from the user.
+            //context.Wait(this.MessageReceivedAsync);
 
         }
-
-        public virtual async Task ChildDialogComplete(IDialogContext context, IAwaitable<object> response)
-        {
-            await context.PostAsync("Muito obrigado pela atenção!");
-            context.Done(this);
-        }
-
 
 
     }
